@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #in order to change clock offsets, coolbits must be enabled
 #run this command in terminal
 #sudo nvidia-xconfig --cool-bits=31 --allow-empty-initial-configuration
@@ -16,6 +17,7 @@ enable_pm () {
     sudo nvidia-smi -pm 1  
 }
 
+#display help menu
 help () {
     echo "overclock.sh help"
     echo -e "-h\t\t\tdisplay help menu"
@@ -32,7 +34,7 @@ help () {
 if ! [[ $nv ]];
     then
         xAuthPath=$(ps a |grep X | awk '{print $10}')
-        echo -e "\n#nv xrdp display auth path or something like that" | cat >> ~/.bashrc
+        echo -e "\n#nv xrdp / ssh display auth path " | cat >> ~/.bashrc
         echo -e "export nv=\"DISPLAY=:0 XAUTHORITY=$xAuthPath\"" | cat >> ~/.bashrc
 fi
 
