@@ -4,16 +4,21 @@
 #
 # this script is set up for dual fan nvidia gpus only at the moment
 # i can't find a command that will give me a fan count per gpu
-# one option is to change a fan speeds for all gpus at the same time
+# one option is to change fan speeds for all gpus at the same time
 
-# in order to change clock offsets, coolbits must be enabled
+# in order to change clock offsets, coolbits must be enabled for all gpus
 # run this command in terminal
 #
-#sudo nvidia-xconfig --cool-bits=31 --allow-empty-initial-configuration
+#sudo nvidia-xconfig --cool-bits=31 --allow-empty-initial-configuration --enable-all-gpus
 #reboot
 
-# this is what i use on my system to keep things simple
-# if nv does not exist then append export nv to .bashrc
+# optional
+# i use the following on my system to add an export statement to my .bashrc file.
+# if you would like to use this instead of local $nv variable then uncomment the if statement below
+# and comment out the 2 lines of code for declaring xAuthPath and nv below.
+# the benefit to this is, if you want to do other nvidia-settings commands
+# you can use $nv instead of writing the whole display auth path
+# example: sudo $nv nvidia-settings -q all
 #
 # if ! [[ $nv ]];
 #     then
@@ -23,8 +28,8 @@
 # fi
 
 #variable for display authority
-xAuthPath=$(ps a |grep X | awk '{print $10}')
-nv="DISPLAY=:0 XAUTHORITY=$xAuthPath"
+xAuthPath=$(ps a |grep X | awk '{print $10}') #comment out this line if using the above if statement
+nv="DISPLAY=:0 XAUTHORITY=$xAuthPath" #comment out this line if using the above if statement
 
 #enable persistant mode
 enable_pm () {
