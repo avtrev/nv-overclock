@@ -50,7 +50,7 @@ help () {
     echo -e "-d\t\t\trestore default fan speed and clock frequencies"
     echo -e "-i <device_id>\t\tset interface device ID"
     echo -e "-p <max_watts>\t\tset power level in max watts"
-    echo -e "-f <fan_speed>\t\tchange gpu fan speed between 0 - 100"
+    echo -e "-f '<fan_speed> <fanid_1> <fanid_2>'\tchange gpu fan speed between 0 - 100"
     echo -e "-c <core_offset>\tchange core clock offset between $coreMin - $coreMax"
     echo -e "-m <memory_offset>\tchange memory clock offset between $memMin - $memMax"
     echo
@@ -75,8 +75,6 @@ while getopts :dqhi:p:f:c:m: option; do
             coreMax=$(sudo $nv nvidia-settings -q [gpu:$deviceID]/GPUGraphicsClockOffsetAllPerformanceLevels | grep -i range | awk '{print $12}')
             memMin=$(sudo $nv nvidia-settings -q [gpu:$deviceID]/GPUMemoryTransferRateOffsetAllPerformanceLevels | grep -i range | awk '{print $10}')
             memMax=$(sudo $nv nvidia-settings -q [gpu:$deviceID]/GPUMemoryTransferRateOffsetAllPerformanceLevels | grep -i range | awk '{print $12}')
-            fan1ID=$(($deviceID * 2))
-            fan2ID=$(($fan1 + 1))
         ;;
         #Restore Defaults
         d)
@@ -100,8 +98,7 @@ while getopts :dqhi:p:f:c:m: option; do
             then
                 echo 'option q present'
                 sudo $nv nvidia-settings -q [gpu:$deviceID]/NvidiaDriverVersion #query nvidia driver version
-                sudo $nv nvidia-settings -q [fan:$fan1ID]/GPUTargetFanSpeed #query fan1 speed
-                sudo $nv nvidia-settings -q [fan:$fan2ID]/GPUTargetFanSpeed #query fan2 speed
+                sudo $nv nvidia-settings -q fans #query fans
                 sudo $nv nvidia-settings -q [gpu:$deviceID]/GPUGraphicsClockOffsetAllPerformanceLevels #query core speed
                 sudo $nv nvidia-settings -q [gpu:$deviceID]/GPUMemoryTransferRateOffsetAllPerformanceLevels #query memory speed
                 sudo $nv nvidia-settings -q [gpu:$deviceID]/GPUCurrentClockFreqs #query all clock speeds
@@ -132,17 +129,20 @@ while getopts :dqhi:p:f:c:m: option; do
             if [ $deviceID ];
             then
                 echo 'option f present'
-                if [ $fan -ge 0 ] && [ $fan -le 100 ];
-                    then
-                        echo "set gpu fan $fan%";
-                        sudo $nv nvidia-settings -a [gpu:$deviceID]/GPUFanControlState=1; #enable fan control
-                        sudo $nv nvidia-settings -a [fan:$fan1ID]/GPUTargetFanSpeed=$fan; #set fan1 speed
-                        sudo $nv nvidia-settings -a [fan:$fan2ID]/GPUTargetFanSpeed=$fan; #set fan2 speed
-
-                    else
-                        echo 'value must be between 0 - 100'
-                        exit 0
-                fi
+                    sudo $nv nvidia-settings -a [gpu:$deviceID]/GPUFanControlState=1; #enable fan control
+                    index=0
+                    for i in $fan;
+                    do
+                        if [ $index -eq 0 ];
+                        then
+                            fanSpeed=$i
+                            echo "set gpu fan $fanSpeed%";
+                        else
+                            sudo $nv nvidia-settings -a [fan:$i]/GPUTargetFanSpeed=$fanSpeed; #set fan1 speed
+                            echo "fan = $i speed = $fanSpeed"
+                        fi
+                        ((index++))
+                    done
             else
                 selectDeviceMessage
                 exit 0
